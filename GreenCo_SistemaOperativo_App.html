@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Operativo — Green & Co S.R.L.</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #F7F6F2;
+    --surface:   #FFFFFF;
+    --border:    #E4E2DC;
+    --text:      #1A1A18;
+    --muted:     #8A8880;
+    --accent:    #1A4731;
+    --accent-cl: #E8F0EB;
+
+    --c-dep:  #1F3864; --c-dep-l: #D6E4F0;
+    --c-log:  #185FA5; --c-log-l: #E8F0FE;
+    --c-ops:  #C45911; --c-ops-l: #FCE4D6;
+    --c-prf:  #7B2D8B; --c-prf-l: #F3E5F5;
+
+    --green:  #1E6B2E; --green-l: #D9EAD3;
+    --yellow: #BF9000; --yellow-l:#FFF2CC;
+    --blue:   #2E75B6; --blue-l:  #D6E4F0;
+    --red:    #C00000; --red-l:   #FDE9E9;
+    --gray:   #606060; --gray-l:  #F0F0F0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ─────────────────────────────────────────────────── */
+  .topbar {
+    background: var(--accent);
+    padding: 0 28px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .topbar-brand span { opacity: .5; font-weight: 400; margin-left: 8px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .search-wrap {
+    position: relative;
+  }
+  #searchInput {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 6px;
+    padding: 6px 12px 6px 32px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #fff;
+    width: 220px;
+    outline: none;
+    transition: background .2s;
+  }
+  #searchInput::placeholder { color: rgba(255,255,255,.4); }
+  #searchInput:focus { background: rgba(255,255,255,.18); }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 13px; opacity: .5; pointer-events: none;
+  }
+  .btn-refresh {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: inherit;
+    color: #fff;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-refresh:hover { background: rgba(255,255,255,.2); }
+
+  /* ── LAYOUT ─────────────────────────────────────────────────── */
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── SIDEBAR ────────────────────────────────────────────────── */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 0;
+  }
+
+  .sidebar-section { margin-bottom: 8px; }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 16px 8px;
+  }
+
+  .area-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 0;
+    transition: background .15s;
+    font-family: inherit;
+  }
+  .area-btn:hover { background: var(--bg); }
+  .area-btn.active { background: var(--accent-cl); }
+  .area-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .area-btn-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+  .area-btn.active .area-btn-name { color: var(--accent); }
+  .area-pct {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  .macro-list { padding: 0 8px; }
+  .macro-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 6px;
+    font-family: inherit;
+    transition: background .15s;
+    margin-bottom: 1px;
+  }
+  .macro-btn:hover { background: var(--bg); }
+  .macro-btn.active { background: var(--accent-cl); }
+  .macro-num {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--muted);
+    min-width: 18px;
+  }
+  .macro-btn.active .macro-num { color: var(--accent); }
+  .macro-name {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.3;
+    flex: 1;
+  }
+  .macro-btn.active .macro-name { color: var(--accent); font-weight: 500; }
+
+  /* ── MAIN ───────────────────────────────────────────────────── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+  }
+
+  /* ── LOADING ────────────────────────────────────────────────── */
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    gap: 16px;
+    color: var(--muted);
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── DASHBOARD ──────────────────────────────────────────────── */
+  .dashboard { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .stat-n {
+    font-size: 28px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-l {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .area-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .area-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    cursor: pointer;
+    transition: box-shadow .2s, transform .15s;
+  }
+  .area-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.06); transform: translateY(-1px); }
+  .area-card-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .area-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .area-card-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .progress-bar-wrap {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent);
+    transition: width .6s ease;
+  }
+  .area-card-stats {
+    display: flex;
+    gap: 12px;
+  }
+  .ac-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .ac-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  /* ── PROCESS LIST VIEW ──────────────────────────────────────── */
+  .view-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .bc-link {
+    cursor: pointer;
+    color: var(--blue);
+  }
+  .bc-link:hover { text-decoration: underline; }
+  .bc-sep { color: var(--border); }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+    color: var(--muted);
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--text);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  /* ── PROCESO CARD ───────────────────────────────────────────── */
+  .proc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: box-shadow .15s;
+  }
+  .proc-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+
+  .proc-hdr {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+  }
+  .proc-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    min-width: 80px;
+  }
+  .proc-name {
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.3;
+  }
+  .proc-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .proc-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .tipo-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  .estado-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-green  { background: var(--green-l);  color: var(--green); }
+  .badge-yellow { background: var(--yellow-l); color: var(--yellow); }
+  .badge-blue   { background: var(--blue-l);   color: var(--blue); }
+  .badge-red    { background: var(--red-l);    color: var(--red); }
+  .badge-gray   { background: var(--gray-l);   color: var(--gray); }
+
+  .proc-chevron {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .proc-card.open .proc-chevron { transform: rotate(90deg); }
+
+  /* ── CHILDREN ───────────────────────────────────────────────── */
+  .proc-children {
+    display: none;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    padding: 12px 16px;
+  }
+  .proc-card.open .proc-children { display: block; }
+
+  .child-group { margin-bottom: 12px; }
+  .child-group-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+
+  .child-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background .1s;
+  }
+  .child-item:hover { background: var(--accent-cl); }
+  .child-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 80px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .child-name {
+    font-size: 12px;
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.3;
+  }
+  .child-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .child-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── SEARCH RESULTS ─────────────────────────────────────────── */
+  .search-results { animation: fadeIn .2s ease; }
+  .search-count {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ── DETAIL PANEL ───────────────────────────────────────────── */
+  .detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    animation: fadeIn .25s ease;
+  }
+  .detail-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .detail-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .detail-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .detail-field { }
+  .detail-field-l {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .detail-field-v {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .url-link {
+    font-size: 12px;
+    color: var(--blue);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .url-link:hover { text-decoration: underline; }
+  .back-btn {
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 16px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    padding: 0;
+  }
+  .back-btn:hover { color: var(--text); }
+
+  /* ── EMPTY ──────────────────────────────────────────────────── */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .sidebar { width: 220px; min-width: 220px; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .area-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    Green &amp; Co S.R.L.
+    <span>Sistema Operativo</span>
+  </div>
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Buscar proceso, código..." />
+    </div>
+    <button class="btn-refresh" onclick="recargar()">↻ Actualizar</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Áreas</div>
+      <button class="area-btn active" data-area="" onclick="seleccionarArea(this, '')">
+        <span class="area-dot" style="background:#1A4731"></span>
+        <span class="area-btn-name">Todas las áreas</span>
+        <span class="area-pct" id="pct-todas">—</span>
+      </button>
+      <button class="area-btn" data-area="Depósito" onclick="seleccionarArea(this,'Depósito')">
+        <span class="area-dot" style="background:var(--c-dep)"></span>
+        <span class="area-btn-name">Depósito</span>
+        <span class="area-pct" id="pct-dep">—</span>
+      </button>
+      <button class="area-btn" data-area="Logística" onclick="seleccionarArea(this,'Logística')">
+        <span class="area-dot" style="background:var(--c-log)"></span>
+        <span class="area-btn-name">Logística</span>
+        <span class="area-pct" id="pct-log">—</span>
+      </button>
+      <button class="area-btn" data-area="Ops Estratégicas" onclick="seleccionarArea(this,'Ops Estratégicas')">
+        <span class="area-dot" style="background:var(--c-ops)"></span>
+        <span class="area-btn-name">Ops Estratégicas</span>
+        <span class="area-pct" id="pct-ops">—</span>
+      </button>
+      <button class="area-btn" data-area="Performance & Proyectos" onclick="seleccionarArea(this,'Performance & Proyectos')">
+        <span class="area-dot" style="background:var(--c-prf)"></span>
+        <span class="area-btn-name">Performance</span>
+        <span class="area-pct" id="pct-prf">—</span>
+      </button>
+    </div>
+    <div class="divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Macroprocesos</div>
+      <div class="macro-list" id="macroList"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Cargando sistema operativo…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURACIÓN ────────────────────────────────────────────────
+// ⚠️ REEMPLAZÁ esta URL con la tuya de Apps Script
+const API_URL = 'https://script.google.com/macros/s/AKfycbypQ4guslmaHOkH84q5bvOwlNOhV3ErgnTbdQIGEQC6YMMUWlM0EPGIOhD-p7P4RRTj/exec';
+
+// ── ESTADO GLOBAL ────────────────────────────────────────────────
+let TODOS = [];
+let PROGRESO = {};
+let areaActiva = '';
+let macroActivo = null;
+let searchTimeout = null;
+
+// ── COLORES ───────────────────────────────────────────────────────
+const AREA_COLORS = {
+  'Depósito': { bg:'#1F3864', light:'#D6E4F0' },
+  'Logística': { bg:'#185FA5', light:'#E8F0FE' },
+  'Ops Estratégicas': { bg:'#C45911', light:'#FCE4D6' },
+  'Performance & Proyectos': { bg:'#7B2D8B', light:'#F3E5F5' },
+};
+const TIPO_COLORS = {
+  'Core':    { bg:'#D6E4F0', color:'#1F3864' },
+  'Soporte': { bg:'#D9EAD3', color:'#1E6B2E' },
+  'Gestión': { bg:'#FFF2CC', color:'#BF9000' },
+  'SRT':     { bg:'#FDE9E9', color:'#C00000' },
+  'Proyecto':{ bg:'#F3E5F5', color:'#7B2D8B' },
+};
+
+// ── INIT ─────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(API_URL + '?accion=todos'),
+      fetch(API_URL + '?accion=progreso'),
+    ]);
+    const d1 = await r1.json();
+    const d2 = await r2.json();
+
+    if (d1.ok) TODOS = d1.items;
+    if (d2.ok) PROGRESO = d2.progreso;
+
+    actualizarProgreso();
+    construirSidebar();
+    mostrarDashboard();
+  } catch(e) {
+    document.getElementById('main').innerHTML =
+      `<div class="empty">❌ Error al cargar: ${e.message}<br><br>
+       <small>Verificá que la URL de la API sea correcta y esté publicada como "Cualquier persona".</small></div>`;
+  }
+}
+
+function recargar() {
+  document.getElementById('main').innerHTML =
+    '<div class="loading"><div class="spinner"></div><div>Actualizando…</div></div>';
+  init();
+}
+
+// ── PROGRESO ─────────────────────────────────────────────────────
+function actualizarProgreso() {
+  let total=0, exist=0;
+  Object.values(PROGRESO).forEach(p => { total+=p.total; exist+=p.existente; });
+  const pctTotal = total > 0 ? Math.round(exist/total*100) : 0;
+
+  document.getElementById('pct-todas').textContent = pctTotal + '%';
+  document.getElementById('pct-dep').textContent  = (PROGRESO['Depósito']?.pct_completado||0) + '%';
+  document.getElementById('pct-log').textContent  = (PROGRESO['Logística']?.pct_completado||0) + '%';
+  document.getElementById('pct-ops').textContent  = (PROGRESO['Ops Estratégicas']?.pct_completado||0) + '%';
+  document.getElementById('pct-prf').textContent  = (PROGRESO['Performance & Proyectos']?.pct_completado||0) + '%';
+}
+
+// ── SIDEBAR MACROS ────────────────────────────────────────────────
+function construirSidebar() {
+  const macros = TODOS.filter(i => i.nivel === 'Macroproceso');
+  const container = document.getElementById('macroList');
+  container.innerHTML = '';
+  macros.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'macro-btn';
+    btn.dataset.id = m.id_unico;
+    btn.onclick = () => seleccionarMacro(btn, m);
+    btn.innerHTML = `
+      <span class="macro-num">${m.macro}</span>
+      <span class="macro-name">${m.nombre}</span>
+    `;
+    container.appendChild(btn);
+  });
+}
+
+function seleccionarArea(btn, area) {
+  document.querySelectorAll('.area-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  areaActiva = area;
+  macroActivo = null;
+  document.querySelectorAll('.macro-btn').forEach(b => b.classList.remove('active'));
+  mostrarProcesos(area, null);
+}
+
+function seleccionarMacro(btn, macro) {
+  document.querySelectorAll('.macro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  macroActivo = macro;
+  mostrarProcesos(macro.area, macro);
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────
+function mostrarDashboard() {
+  const main = document.getElementById('main');
+  let total=0, exist=0, proceso_n=0, wip=0, crear=0;
+  Object.values(PROGRESO).forEach(p => {
+    total+=p.total; exist+=p.existente;
+    wip += p.en_proceso; crear += p.crear;
+  });
+  proceso_n = wip;
+  const pctTotal = total > 0 ? Math.round(exist/total*100) : 0;
+
+  const macros = TODOS.filter(i => i.nivel==='Macroproceso').length;
+  const procesos = TODOS.filter(i => i.nivel==='Proceso').length;
+
+  let areaCardsHTML = '';
+  const areas = [
+    { key:'Depósito', label:'Depósito', macros:'1–6', color:'var(--c-dep)', light:'var(--c-dep-l)' },
+    { key:'Logística', label:'Logística', macros:'8', color:'var(--c-log)', light:'var(--c-log-l)' },
+    { key:'Ops Estratégicas', label:'Ops Estratégicas', macros:'9–15', color:'var(--c-ops)', light:'var(--c-ops-l)' },
+    { key:'Performance & Proyectos', label:'Performance & Proyectos', macros:'7', color:'var(--c-prf)', light:'var(--c-prf-l)' },
+  ];
+  areas.forEach(a => {
+    const p = PROGRESO[a.key] || {total:0,existente:0,en_proceso:0,crear:0,vencido:0,pct_completado:0};
+    areaCardsHTML += `
+      <div class="area-card" onclick="seleccionarAreaDesde('${a.key}')">
+        <div class="area-card-hdr">
+          <span class="area-badge" style="background:${a.light};color:${a.color}">Macros ${a.macros}</span>
+          <span class="area-card-name">${a.label}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width:${p.pct_completado}%;background:${a.color}"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="area-card-stats">
+            <div class="ac-stat"><div class="ac-dot" style="background:var(--green)"></div>${p.existente} existentes</div>
+            <div class="ac-stat"><div class="ac-dot" style="background:var(--yellow)"></div>${p.en_proceso} en proceso</div>
+            <div class="ac-stat"><div class="ac-dot" style="background:var(--blue)"></div>${p.crear} por crear</div>
+          </div>
+          <strong style="font-size:20px;font-family:'DM Mono',monospace;color:${a.color}">${p.pct_completado}%</strong>
+        </div>
+      </div>
+    `;
+  });
+
+  main.innerHTML = `
+    <div class="dashboard">
+      <div class="page-title">Sistema Operativo — Green &amp; Co S.R.L.</div>
+      <div class="page-sub">Supply Chain · Depósito · Logística · Ops Estratégicas · Performance &amp; Proyectos</div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-n">${macros}</div>
+          <div class="stat-l">Macroprocesos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n">${procesos}</div>
+          <div class="stat-l">Procesos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n" style="color:var(--green)">${exist}</div>
+          <div class="stat-l">Docs existentes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n" style="color:var(--accent)">${pctTotal}%</div>
+          <div class="stat-l">Completitud total</div>
+        </div>
+      </div>
+
+      <div class="area-cards">${areaCardsHTML}</div>
+    </div>
+  `;
+}
+
+function seleccionarAreaDesde(area) {
+  const btn = [...document.querySelectorAll('.area-btn')].find(b => b.dataset.area === area);
+  if (btn) seleccionarArea(btn, area);
+}
+
+// ── VISTA DE PROCESOS ─────────────────────────────────────────────
+function mostrarProcesos(area, macroFiltro) {
+  const main = document.getElementById('main');
+
+  let procesos = TODOS.filter(i => i.nivel === 'Proceso');
+  if (area) procesos = procesos.filter(p => p.area === area);
+  if (macroFiltro) procesos = procesos.filter(p => p.macro === macroFiltro.macro);
+
+  const titulo = macroFiltro
+    ? `${macroFiltro.macro}. ${macroFiltro.nombre}`
+    : (area || 'Todos los procesos');
+
+  const bcArea = area ? `<span class="bc-link" onclick="seleccionarAreaDesde('${area}')">${area}</span><span class="bc-sep">›</span>` : '';
+  const bcMacro = macroFiltro ? `<span>${macroFiltro.nombre}</span>` : '';
+
+  main.innerHTML = `
+    <div class="dashboard">
+      <div class="breadcrumb">
+        <span class="bc-link" onclick="mostrarDashboard()">Inicio</span>
+        <span class="bc-sep">›</span>
+        ${bcArea}
+        ${bcMacro}
+      </div>
+      <div class="view-header">
+        <div>
+          <div class="page-title">${titulo}</div>
+          <div class="page-sub">${procesos.length} proceso${procesos.length!==1?'s':''}</div>
+        </div>
+        <div class="filter-row" id="filterRow">
+          <button class="filter-btn active" onclick="filtrarTipo(this,'')">Todos</button>
+          <button class="filter-btn" onclick="filtrarTipo(this,'Core')">Core</button>
+          <button class="filter-btn" onclick="filtrarTipo(this,'Soporte')">Soporte</button>
+          <button class="filter-btn" onclick="filtrarTipo(this,'Gestión')">Gestión</button>
+          <button class="filter-btn" onclick="filtrarTipo(this,'SRT')">SRT</button>
+        </div>
+      </div>
+      <div id="processList">
+        ${renderProcesos(procesos)}
+      </div>
+    </div>
+  `;
+}
+
+function renderProcesos(procesos) {
+  if (!procesos.length) return '<div class="empty">No hay procesos en esta vista.</div>';
+  return procesos.map(p => renderProcesoCard(p)).join('');
+}
+
+function renderProcesoCard(proc) {
+  const hijos = TODOS.filter(i =>
+    (i.nivel==='Procedimiento'||i.nivel==='Instructivo'||i.nivel==='Registro') &&
+    i.id_padre === proc.id_unico
+  );
+  const procs   = hijos.filter(h => h.nivel==='Procedimiento');
+  const insts   = hijos.filter(h => h.nivel==='Instructivo');
+  const regs    = hijos.filter(h => h.nivel==='Registro');
+  const tipoStyle = TIPO_COLORS[proc.tipo_nivel] || {bg:'#F0F0F0',color:'#606060'};
+  const estadoBadge = badgeEstado(proc.estado);
+
+  const renderHijos = (arr, label) => {
+    if (!arr.length) return '';
+    return `
+      <div class="child-group">
+        <div class="child-group-label">${label} · ${arr.length}</div>
+        ${arr.map(h => `
+          <div class="child-item" onclick="mostrarDetalle('${h.id_unico}')">
+            <div class="child-code">${h.codigo}</div>
+            <div style="flex:1">
+              <div class="child-name">${h.nombre}</div>
+              <div class="child-desc">${h.descripcion||''}</div>
+            </div>
+            <div class="child-right">
+              ${badgeEstado(h.estado)}
+              ${h.url && h.url !== '— pendiente —'
+                ? `<a href="${h.url}" target="_blank" style="font-size:10px;color:var(--blue)" onclick="event.stopPropagation()">↗ Doc</a>`
+                : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  };
+
+  return `
+    <div class="proc-card" id="card-${proc.id_unico}" data-tipo="${proc.tipo_nivel||''}">
+      <div class="proc-hdr" onclick="toggleProceso('${proc.id_unico}')">
+        <div class="proc-code">${proc.codigo}</div>
+        <div style="flex:1">
+          <div class="proc-name">${proc.nombre}</div>
+          <div class="proc-desc">${proc.responsable||''}</div>
+        </div>
+        <div class="proc-meta">
+          ${proc.tipo_nivel ? `<span class="tipo-badge" style="background:${tipoStyle.bg};color:${tipoStyle.color}">${proc.tipo_nivel}</span>` : ''}
+          ${estadoBadge}
+          <span class="proc-chevron">›</span>
+        </div>
+      </div>
+      <div class="proc-children">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+          IN: ${proc.descripcion?.replace('IN:','').split('|OUT:')[0]?.trim()||'—'}
+          &nbsp;·&nbsp;
+          OUT: ${proc.descripcion?.split('|OUT:')[1]?.trim()||'—'}
+        </div>
+        ${renderHijos(procs,'Procedimientos')}
+        ${renderHijos(insts,'Instructivos')}
+        ${renderHijos(regs,'Registros')}
+        ${!hijos.length ? '<div style="font-size:12px;color:var(--muted);padding:8px 0">No hay documentos vinculados todavía.</div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function toggleProceso(id) {
+  const card = document.getElementById('card-' + id);
+  if (card) card.classList.toggle('open');
+}
+
+function filtrarTipo(btn, tipo) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.proc-card').forEach(card => {
+    if (!tipo || card.dataset.tipo === tipo) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ── DETALLE ───────────────────────────────────────────────────────
+function mostrarDetalle(id) {
+  const item = TODOS.find(i => i.id_unico === id);
+  if (!item) return;
+
+  const main = document.getElementById('main');
+  const estadoBadge = badgeEstado(item.estado);
+  const urlHTML = item.url && item.url !== '— pendiente —'
+    ? `<a class="url-link" href="${item.url}" target="_blank">${item.url}</a>`
+    : '<span style="color:var(--muted)">— pendiente de carga —</span>';
+
+  main.innerHTML = `
+    <div>
+      <button class="back-btn" onclick="history.back(); volverAtras()">← Volver</button>
+      <div class="detail-panel">
+        <div class="detail-code">${item.nivel} · ${item.area}</div>
+        <div class="detail-name">${item.nombre}</div>
+        <div class="detail-desc">${item.descripcion || ''}</div>
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          ${estadoBadge}
+          ${item.tipo_nivel ? `<span class="tipo-badge" style="background:${(TIPO_COLORS[item.tipo_nivel]||{bg:'#F0F0F0'}).bg};color:${(TIPO_COLORS[item.tipo_nivel]||{color:'#606060'}).color}">${item.tipo_nivel}</span>` : ''}
+        </div>
+        <div class="detail-grid">
+          <div class="detail-field">
+            <div class="detail-field-l">Código</div>
+            <div class="detail-field-v" style="font-family:'DM Mono',monospace">${item.codigo}</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-l">Responsable</div>
+            <div class="detail-field-v">${item.responsable || '—'}</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-l">Firma requerida</div>
+            <div class="detail-field-v">${item.firma || '—'}</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-l">Proceso padre</div>
+            <div class="detail-field-v">${item.proc_padre || '—'}</div>
+          </div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-l">Documento en Drive</div>
+          <div class="detail-field-v" style="margin-top:4px">${urlHTML}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+let _historial = [];
+function volverAtras() {
+  if (macroActivo) mostrarProcesos(macroActivo.area, macroActivo);
+  else if (areaActiva) mostrarProcesos(areaActiva, null);
+  else mostrarDashboard();
+}
+
+// ── BÚSQUEDA ──────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  const q = this.value.trim();
+  if (!q) {
+    if (macroActivo) mostrarProcesos(macroActivo.area, macroActivo);
+    else if (areaActiva) mostrarProcesos(areaActiva, null);
+    else mostrarDashboard();
+    return;
+  }
+  searchTimeout = setTimeout(() => buscar(q), 200);
+});
+
+function buscar(q) {
+  const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const qn = norm(q);
+  const resultados = TODOS.filter(i =>
+    norm(i.nombre).includes(qn) ||
+    norm(i.codigo).includes(qn) ||
+    norm(i.descripcion).includes(qn) ||
+    norm(i.responsable).includes(qn)
+  ).slice(0, 50);
+
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <div class="search-results">
+      <div class="page-title">Resultados para "${q}"</div>
+      <div class="search-count">${resultados.length} resultado${resultados.length!==1?'s':''}</div>
+      ${resultados.length === 0
+        ? '<div class="empty">Sin resultados. Probá con otro término.</div>'
+        : resultados.map(item => `
+          <div class="child-item" style="margin-bottom:6px" onclick="mostrarDetalle('${item.id_unico}')">
+            <div class="child-code">${item.codigo}</div>
+            <div style="flex:1">
+              <div class="child-name">${item.nombre}</div>
+              <div class="child-desc">${item.descripcion||''}</div>
+            </div>
+            <div class="child-right">
+              <span style="font-size:10px;color:var(--muted)">${item.nivel}</span>
+              ${badgeEstado(item.estado)}
+            </div>
+          </div>
+        `).join('')
+      }
+    </div>
+  `;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function badgeEstado(estado) {
+  if (!estado) return '';
+  let cls = 'badge-gray';
+  if (estado.includes('✅')) cls = 'badge-green';
+  else if (estado.includes('⚠️')) cls = 'badge-yellow';
+  else if (estado.includes('🔵')) cls = 'badge-blue';
+  else if (estado.includes('🔴')) cls = 'badge-red';
+  return `<span class="estado-badge ${cls}">${estado}</span>`;
+}
+
+// ── START ─────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
